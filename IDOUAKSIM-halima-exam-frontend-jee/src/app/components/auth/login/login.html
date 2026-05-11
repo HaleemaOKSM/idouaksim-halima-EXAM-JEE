@@ -1,1 +1,76 @@
-<p>login works!</p>
+<!-- src/app/components/auth/login/login.component.html -->
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon"><i class="ti ti-shield-check"></i></div>
+      <div>
+        <div class="logo-text">AssuranceApp</div>
+        <div class="logo-sub">Portail de gestion</div>
+      </div>
+    </div>
+
+    <div class="alert alert-danger" *ngIf="error">
+      <i class="ti ti-alert-circle"></i> {{ error }}
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label class="form-label">Nom d'utilisateur</label>
+        <input class="form-control" formControlName="username" placeholder="admin" autocomplete="username">
+        <div class="form-error" *ngIf="f['username'].touched && f['username'].errors?.['required']">
+          Le nom d'utilisateur est requis
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <div style="position:relative">
+          <input class="form-control" [type]="showPwd ? 'text' : 'password'"
+                 formControlName="password" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="pwd-toggle" (click)="showPwd = !showPwd">
+            <i class="ti" [class.ti-eye]="!showPwd" [class.ti-eye-off]="showPwd"></i>
+          </button>
+        </div>
+        <div class="form-error" *ngIf="f['password'].touched && f['password'].errors?.['required']">
+          Le mot de passe est requis
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem"
+              [disabled]="loading">
+        <i class="ti ti-loader" *ngIf="loading" style="animation:spin 1s linear infinite"></i>
+        <i class="ti ti-login" *ngIf="!loading"></i>
+        {{ loading ? 'Connexion...' : 'Se connecter' }}
+      </button>
+    </form>
+
+    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid #f1f5f9">
+      <p style="font-size:11px;color:#94a3b8;text-align:center;margin-bottom:8px">Comptes de test</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+        <button class="btn btn-sm" style="font-size:10px;flex-direction:column;gap:2px;padding:6px"
+                (click)="fillCredentials('admin','admin1234')">
+          <span style="color:#a32d2d;font-weight:600">ADMIN</span>
+          <span style="color:#94a3b8">admin</span>
+        </button>
+        <button class="btn btn-sm" style="font-size:10px;flex-direction:column;gap:2px;padding:6px"
+                (click)="fillCredentials('employe1','emp1234')">
+          <span style="color:#ba7517;font-weight:600">EMPLOYÉ</span>
+          <span style="color:#94a3b8">employe1</span>
+        </button>
+        <button class="btn btn-sm" style="font-size:10px;flex-direction:column;gap:2px;padding:6px"
+                (click)="fillCredentials('client1','cli1234')">
+          <span style="color:#1a56db;font-weight:600">CLIENT</span>
+          <span style="color:#94a3b8">client1</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .pwd-toggle {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>

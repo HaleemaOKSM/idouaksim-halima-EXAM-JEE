@@ -1,1 +1,132 @@
-<p>dashboard works!</p>
+<!-- src/app/components/dashboard/dashboard.component.html -->
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-label"><i class="ti ti-users" style="margin-right:4px"></i> Total clients</div>
+    <div class="metric-value">{{ stats.totalClients }}</div>
+    <div class="metric-sub up"><i class="ti ti-trending-up"></i> +12% ce mois</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label"><i class="ti ti-file-description" style="margin-right:4px"></i> Contrats actifs</div>
+    <div class="metric-value">{{ stats.contratsActifs }}</div>
+    <div class="metric-sub up">+5 cette semaine</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label"><i class="ti ti-credit-card" style="margin-right:4px"></i> Paiements (mois)</div>
+    <div class="metric-value">{{ stats.paiementsMois | number:'1.0-0' }} MAD</div>
+    <div class="metric-sub up">+8.2%</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label"><i class="ti ti-alert-circle" style="margin-right:4px"></i> Contrats résiliés</div>
+    <div class="metric-value">{{ stats.contratsResilies }}</div>
+    <div class="metric-sub down"><i class="ti ti-trending-down"></i> -3 ce mois</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+  <div class="card">
+    <div class="section-header">
+      <span class="section-title">Répartition des contrats</span>
+    </div>
+    <div style="display:flex;gap:1.5rem;align-items:center;padding:0.5rem 0">
+      <svg width="100" height="100" viewBox="0 0 36 36" aria-hidden="true">
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f1f5f9" stroke-width="3.8"/>
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1a56db" stroke-width="3.8"
+                [attr.stroke-dasharray]="getDonut(stats.contratsAuto, stats.totalContrats) + ' 100'"
+                stroke-dashoffset="25"/>
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#fac775" stroke-width="3.8"
+                [attr.stroke-dasharray]="getDonut(stats.contratsHab, stats.totalContrats) + ' 100'"
+                [attr.stroke-dashoffset]="-(getDonut(stats.contratsAuto, stats.totalContrats) - 25)"/>
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#5dcaa5" stroke-width="3.8"
+                [attr.stroke-dasharray]="getDonut(stats.contratsSante, stats.totalContrats) + ' 100'"
+                [attr.stroke-dashoffset]="-(getDonut(stats.contratsAuto + stats.contratsHab, stats.totalContrats) - 25)"/>
+      </svg>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+          <div style="width:10px;height:10px;border-radius:50%;background:#1a56db;flex-shrink:0"></div>
+          Automobile — {{ getDonut(stats.contratsAuto, stats.totalContrats) | number:'1.0-0' }}%
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+          <div style="width:10px;height:10px;border-radius:50%;background:#fac775;flex-shrink:0"></div>
+          Habitation — {{ getDonut(stats.contratsHab, stats.totalContrats) | number:'1.0-0' }}%
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+          <div style="width:10px;height:10px;border-radius:50%;background:#5dcaa5;flex-shrink:0"></div>
+          Santé — {{ getDonut(stats.contratsSante, stats.totalContrats) | number:'1.0-0' }}%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-header"><span class="section-title">Statut des contrats</span></div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding-top:8px">
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span>Validés</span>
+          <span style="font-weight:500">{{ stats.contratsValides }}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="background:#0f6e56"
+               [style.width.%]="stats.totalContrats ? stats.contratsValides/stats.totalContrats*100 : 0"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span>En cours</span>
+          <span style="font-weight:500">{{ stats.contratsEnCours }}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="background:#ba7517"
+               [style.width.%]="stats.totalContrats ? stats.contratsEnCours/stats.totalContrats*100 : 0"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span>Résiliés</span>
+          <span style="font-weight:500">{{ stats.contratsResilies }}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="background:#a32d2d"
+               [style.width.%]="stats.totalContrats ? stats.contratsResilies/stats.totalContrats*100 : 0"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-header">
+    <span class="section-title">Derniers contrats</span>
+    <a routerLink="/contrats" class="btn btn-sm">Voir tout</a>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead><tr><th>Client</th><th>Type</th><th>Date</th><th>Cotisation</th><th>Statut</th></tr></thead>
+      <tbody>
+      <tr *ngFor="let c of derniersContrats">
+        <td>{{ c.clientNom }}</td>
+        <td>
+          <span class="badge badge-auto" *ngIf="c.typeContrat==='AUTOMOBILE'"><i class="ti ti-car"></i> Auto</span>
+          <span class="badge badge-hab" *ngIf="c.typeContrat==='HABITATION'"><i class="ti ti-home"></i> Hab.</span>
+          <span class="badge badge-sante" *ngIf="c.typeContrat==='SANTE'"><i class="ti ti-heart-rate"></i> Santé</span>
+        </td>
+        <td>{{ c.dateSouscription | date:'dd/MM/yyyy' }}</td>
+        <td>{{ c.montantCotisation | number:'1.0-0' }} MAD</td>
+        <td>
+          <span class="badge badge-success" *ngIf="c.statut==='VALIDE'">Validé</span>
+          <span class="badge badge-warning" *ngIf="c.statut==='EN_COURS'">En cours</span>
+          <span class="badge badge-danger" *ngIf="c.statut==='RESILIE'">Résilié</span>
+        </td>
+      </tr>
+      <tr *ngIf="derniersContrats.length === 0">
+        <td colspan="5"><div class="empty-state" style="padding:1.5rem"><i class="ti ti-file-description"></i><p>Aucun contrat</p></div></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  .progress-bar { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+</style>

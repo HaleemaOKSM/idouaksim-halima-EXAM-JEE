@@ -1,1 +1,94 @@
-<p>layout works!</p>
+<!-- src/app/components/layout/layout.component.html -->
+<div class="app-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
+    <div class="sidebar-header">
+      <div class="logo">
+        <i class="ti ti-shield-check"></i>
+        <span *ngIf="!sidebarCollapsed">
+          <strong>AssuranceApp</strong>
+          <small>Gestion contrats</small>
+        </span>
+      </div>
+      <button class="toggle-btn" (click)="toggleSidebar()">
+        <i class="ti" [class.ti-layout-sidebar-left-collapse]="!sidebarCollapsed"
+           [class.ti-layout-sidebar-right-collapse]="sidebarCollapsed"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <span class="nav-label" *ngIf="!sidebarCollapsed">Principal</span>
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+          <i class="ti ti-dashboard"></i><span *ngIf="!sidebarCollapsed">Dashboard</span>
+        </a>
+        <a routerLink="/clients" routerLinkActive="active" class="nav-link">
+          <i class="ti ti-users"></i><span *ngIf="!sidebarCollapsed">Clients</span>
+        </a>
+        <a routerLink="/contrats" routerLinkActive="active" class="nav-link">
+          <i class="ti ti-file-description"></i><span *ngIf="!sidebarCollapsed">Contrats</span>
+        </a>
+        <a routerLink="/paiements" routerLinkActive="active" class="nav-link">
+          <i class="ti ti-credit-card"></i><span *ngIf="!sidebarCollapsed">Paiements</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <span class="nav-label" *ngIf="!sidebarCollapsed">Types de contrats</span>
+        <a routerLink="/contrats/automobile" routerLinkActive="active" class="nav-link">
+          <i class="ti ti-car"></i><span *ngIf="!sidebarCollapsed">Automobile</span>
+        </a>
+        <a routerLink="/contrats/habitation" routerLinkActive="active" class="nav-link">
+          <i class="ti ti-home"></i><span *ngIf="!sidebarCollapsed">Habitation</span>
+        </a>
+        <a routerLink="/contrats/sante" routerLinkActive="active" class="nav-link">
+          <i class="ti ti-heart-rate"></i><span *ngIf="!sidebarCollapsed">Santé</span>
+        </a>
+      </div>
+
+      <div class="nav-group" *ngIf="authService.isAdmin()">
+        <span class="nav-label" *ngIf="!sidebarCollapsed">Administration</span>
+        <a routerLink="/admin/utilisateurs" routerLinkActive="active" class="nav-link">
+          <i class="ti ti-user-cog"></i><span *ngIf="!sidebarCollapsed">Utilisateurs</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer" *ngIf="!sidebarCollapsed">
+      <div class="user-info">
+        <div class="avatar">{{ initials }}</div>
+        <div class="user-details">
+          <span class="user-name">{{ currentUser?.username }}</span>
+          <span class="user-role">{{ primaryRole }}</span>
+        </div>
+        <button class="logout-btn" (click)="logout()" title="Déconnexion">
+          <i class="ti ti-logout"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title">{{ pageTitle }}</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" *ngIf="authService.isAdmin() || authService.isEmploye()"
+                routerLink="/contrats/new">
+          <i class="ti ti-plus"></i> Nouveau contrat
+        </button>
+        <div class="notification-bell">
+          <i class="ti ti-bell"></i>
+          <span class="notif-dot" *ngIf="notifications > 0">{{ notifications }}</span>
+        </div>
+        <div class="user-avatar" [title]="currentUser?.username || ''">{{ initials }}</div>
+      </div>
+    </header>
+
+    <main class="content-area">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

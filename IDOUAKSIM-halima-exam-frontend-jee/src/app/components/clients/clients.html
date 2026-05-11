@@ -1,1 +1,150 @@
-<p>clients works!</p>
+<!-- src/app/components/clients/clients.component.html -->
+<div class="metrics-grid" style="grid-template-columns:repeat(3,1fr)">
+  <div class="metric-card">
+    <div class="metric-label">Total clients</div>
+    <div class="metric-value">{{ totalElements }}</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Avec contrat actif</div>
+    <div class="metric-value">{{ clientsAvecContrat }}</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Nouveaux ce mois</div>
+    <div class="metric-value">{{ nouveauxCeMois }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-header">
+    <span class="section-title">Liste des clients</span>
+    <button class="btn btn-primary btn-sm"
+            *ngIf="authService.isAdmin() || authService.isEmploye()"
+            (click)="openModal()">
+      <i class="ti ti-plus"></i> Nouveau client
+    </button>
+  </div>
+
+  <div class="filters">
+    <input class="filter-input" placeholder="Rechercher (nom, email)..."
+           [(ngModel)]="searchTerm" (ngModelChange)="onSearch()">
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Client</th>
+        <th>Email</th>
+        <th>Contrats</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let client of clients">
+        <td>#{{ client.id }}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="initials-avatar" [style.background]="getAvatarBg(client.nom)">
+              {{ getInitials(client.nom) }}
+            </div>
+            <strong>{{ client.nom }}</strong>
+          </div>
+        </td>
+        <td>{{ client.email }}</td>
+        <td>
+            <span class="badge" [class.badge-info]="(client.contrats?.length || 0) > 0"
+                  [class.badge-gray]="(client.contrats?.length || 0) === 0">
+              {{ client.contrats?.length || 0 }} contrat(s)
+            </span>
+        </td>
+        <td>
+          <button class="btn btn-sm" (click)="viewClient(client)" title="Voir détails">
+            <i class="ti ti-eye"></i>
+          </button>
+          <button class="btn btn-sm" (click)="editClient(client)"
+                  *ngIf="authService.isAdmin() || authService.isEmploye()" title="Modifier">
+            <i class="ti ti-edit"></i>
+          </button>
+          <button class="btn btn-sm btn-danger" (click)="deleteClient(client.id)"
+                  *ngIf="authService.isAdmin()" title="Supprimer">
+            <i class="ti ti-trash"></i>
+          </button>
+        </td>
+      </tr>
+      <tr *ngIf="clients.length === 0">
+        <td colspan="5">
+          <div class="empty-state">
+            <i class="ti ti-users"></i>
+            <p>Aucun client trouvé</p>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 0">
+      <i class="ti ti-chevron-left"></i>
+    </button>
+    <button class="page-btn" *ngFor="let p of pages"
+            [class.active]="p === currentPage" (click)="goToPage(p)">{{ p + 1 }}</button>
+    <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">
+      <i class="ti ti-chevron-right"></i>
+    </button>
+  </div>
+</div>
+
+<!-- MODAL Form -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">{{ editMode ? 'Modifier le client' : 'Nouveau client' }}</span>
+      <button class="close-btn" (click)="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+
+    <div class="alert alert-success" *ngIf="successMsg">
+      <i class="ti ti-check"></i> {{ successMsg }}
+    </div>
+    <div class="alert alert-danger" *ngIf="errorMsg">
+      <i class="ti ti-alert-circle"></i> {{ errorMsg }}
+    </div>
+
+    <form [formGroup]="clientForm" (ngSubmit)="saveClient()">
+      <div class="form-group">
+        <label class="form-label">Nom complet *</label>
+        <input class="form-control" formControlName="nom" placeholder="Ahmed Benali">
+        <div class="form-error"
+             *ngIf="f['nom'].touched && f['nom'].errors?.['required']">
+          Nom obligatoire
+        Le nom est requis
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input class="form-control" type="email" formControlName="email" placeholder="ahmed@example.ma">
+        <div class="form-error" *ngIf="f['email'].touched && f['email'].errors?.['required']">
+          L'email est requis
+        </div>
+        <div class="form-error" *ngIf="f['email'].touched && f['email'].errors?.['email']">
+          Format email invalide
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:1.25rem">
+        <button type="button" class="btn" (click)="closeModal()">Annuler</button>
+        <button type="submit" class="btn btn-primary" [disabled]="loading">
+          <i class="ti ti-check"></i> {{ editMode ? 'Enregistrer' : 'Créer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .initials-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600; color: white; flex-shrink: 0;
+  }
+</style>

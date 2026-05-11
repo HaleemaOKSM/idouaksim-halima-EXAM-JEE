@@ -1,1 +1,207 @@
-<p>contrats works!</p>
+<!-- src/app/components/contrats/contrats.component.html -->
+<div class="filters">
+  <input class="filter-input" placeholder="Rechercher..." [(ngModel)]="searchTerm">
+  <select class="filter-input" [(ngModel)]="filterType" (ngModelChange)="loadContrats()">
+    <option value="">Tous les types</option>
+    <option value="AUTOMOBILE">Automobile</option>
+    <option value="HABITATION">Habitation</option>
+    <option value="SANTE">Santé</option>
+  </select>
+  <select class="filter-input" [(ngModel)]="filterStatut" (ngModelChange)="loadContrats()">
+    <option value="">Tous les statuts</option>
+    <option value="EN_COURS">En cours</option>
+    <option value="VALIDE">Validé</option>
+    <option value="RESILIE">Résilié</option>
+  </select>
+  <button class="btn btn-primary" (click)="openModal()"
+          *ngIf="authService.isAdmin() || authService.isEmploye()">
+    <i class="ti ti-plus"></i> Nouveau contrat
+  </button>
+</div>
+
+<div class="card">
+  <div class="table-container">
+    <table>
+      <thead>
+      <tr>
+        <th>ID</th><th>Client</th><th>Type</th><th>Souscription</th>
+        <th>Cotisation</th><th>Durée</th><th>Taux</th><th>Statut</th><th>Actions</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let c of contrats">
+        <td>#{{ c.id }}</td>
+        <td>{{ c.clientNom }}</td>
+        <td>
+            <span class="badge badge-auto" *ngIf="c.typeContrat === 'AUTOMOBILE'">
+              <i class="ti ti-car"></i> Auto
+            </span>
+          <span class="badge badge-hab" *ngIf="c.typeContrat === 'HABITATION'">
+              <i class="ti ti-home"></i> Habitation
+            </span>
+          <span class="badge badge-sante" *ngIf="c.typeContrat === 'SANTE'">
+              <i class="ti ti-heart-rate"></i> Santé
+            </span>
+        </td>
+        <td>{{ c.dateSouscription | date:'dd/MM/yyyy' }}</td>
+        <td>{{ c.montantCotisation | number:'1.0-0' }} MAD</td>
+        <td>{{ c.dureeContrat }} mois</td>
+        <td>{{ c.tauxCouverture }}%</td>
+        <td>
+          <span class="badge" [ngClass]="getStatutClass(c.statut)">{{ getStatutLabel(c.statut) }}</span>
+        </td>
+        <td>
+          <button class="btn btn-sm" (click)="viewContrat(c)"><i class="ti ti-eye"></i></button>
+          <button class="btn btn-sm" (click)="changeStatut(c)"
+                  *ngIf="authService.isAdmin() || authService.isEmploye()">
+            <i class="ti ti-refresh"></i>
+          </button>
+        </td>
+      </tr>
+      <tr *ngIf="contrats.length === 0">
+        <td colspan="9">
+          <div class="empty-state"><i class="ti ti-file-description"></i><p>Aucun contrat trouvé</p></div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL Nouveau contrat -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">Nouveau contrat d'assurance</span>
+      <button class="close-btn" (click)="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+
+    <div class="tabs">
+      <div class="tab" [class.active]="activeTab === 'general'" (click)="activeTab='general'">Infos générales</div>
+      <div class="tab" [class.active]="activeTab === 'specifique'" (click)="activeTab='specifique'">Détails spécifiques</div>
+    </div>
+
+    <form [formGroup]="contratForm" (ngSubmit)="saveContrat()">
+      <!-- Tab: General -->
+      <div *ngIf="activeTab === 'general'">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Client *</label>
+            <select class="form-control" formControlName="clientId">
+              <option *ngFor="let c of clientsList" [value]="c.id">{{ c.nom }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type de contrat *</label>
+            <select class="form-control" formControlName="typeContrat" (change)="onTypeChange()">
+              <option value="AUTOMOBILE">Automobile</option>
+              <option value="HABITATION">Habitation</option>
+              <option value="SANTE">Santé</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Date de souscription *</label>
+            <input class="form-control" type="date" formControlName="dateSouscription">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Statut</label>
+            <select class="form-control" formControlName="statut">
+              <option value="EN_COURS">En cours</option>
+              <option value="VALIDE">Validé</option>
+              <option value="RESILIE">Résilié</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Cotisation mensuelle (MAD) *</label>
+            <input class="form-control" type="number" formControlName="montantCotisation">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Durée (mois) *</label>
+            <input class="form-control" type="number" formControlName="dureeContrat">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Taux de couverture (%) *</label>
+          <input class="form-control" type="number" min="0" max="100" formControlName="tauxCouverture">
+        </div>
+      </div>
+
+      <!-- Tab: Spécifique -->
+      <div *ngIf="activeTab === 'specifique'">
+        <!-- Automobile -->
+        <ng-container *ngIf="contratForm.get('typeContrat')?.value === 'AUTOMOBILE'" formGroupName="automobile">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">N° Immatriculation *</label>
+              <input class="form-control" formControlName="numeroImmatriculation" placeholder="12345-A-1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Marque *</label>
+              <input class="form-control" formControlName="marqueVehicule" placeholder="Dacia">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modèle *</label>
+            <input class="form-control" formControlName="modeleVehicule" placeholder="Logan">
+          </div>
+        </ng-container>
+
+        <!-- Habitation -->
+        <ng-container *ngIf="contratForm.get('typeContrat')?.value === 'HABITATION'" formGroupName="habitation">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Type de logement *</label>
+              <select class="form-control" formControlName="typeLogement">
+                <option value="APPARTEMENT">Appartement</option>
+                <option value="MAISON">Maison</option>
+                <option value="LOCAL_COMMERCIAL">Local commercial</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Superficie (m²) *</label>
+              <input class="form-control" type="number" formControlName="superficie">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Adresse du logement *</label>
+            <input class="form-control" formControlName="adresseLogement" placeholder="12 Rue Ibn Sina, Casablanca">
+          </div>
+        </ng-container>
+
+        <!-- Santé -->
+        <ng-container *ngIf="contratForm.get('typeContrat')?.value === 'SANTE'" formGroupName="sante">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Niveau de couverture *</label>
+              <select class="form-control" formControlName="niveauCouverture">
+                <option value="BASIQUE">Basique</option>
+                <option value="INTERMEDIAIRE">Intermédiaire</option>
+                <option value="PREMIUM">Premium</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nombre de personnes *</label>
+              <input class="form-control" type="number" min="1" formControlName="nombrePersonnesCouvertes">
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;margin-top:1.25rem">
+        <button type="button" class="btn" (click)="activeTab = activeTab === 'general' ? 'specifique' : 'general'">
+          {{ activeTab === 'general' ? 'Suivant →' : '← Précédent' }}
+        </button>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn" (click)="closeModal()">Annuler</button>
+          <button type="submit" class="btn btn-primary" *ngIf="activeTab === 'specifique'">
+            <i class="ti ti-check"></i> Créer le contrat
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
