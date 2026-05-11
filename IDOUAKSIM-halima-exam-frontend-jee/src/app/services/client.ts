@@ -1,3 +1,4 @@
+// src/app/services/client.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -5,12 +6,11 @@ import { Client, PageResponse } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
 export class ClientService {
-  private readonly API = 'http://localhost:8080/api/clients';
+  private readonly API = '/api/clients';
   constructor(private http: HttpClient) {}
 
   getAll(page = 0, size = 10, search = ''): Observable<PageResponse<Client>> {
-    const params = new HttpParams()
-      .set('page', page).set('size', size).set('search', search);
+    const params = new HttpParams().set('page', page).set('size', size).set('search', search);
     return this.http.get<PageResponse<Client>>(this.API, { params });
   }
 
@@ -28,9 +28,5 @@ export class ClientService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.API}/${id}`);
-  }
-
-  getContrats(clientId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.API}/${clientId}/contrats`);
   }
 }
